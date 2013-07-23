@@ -1,5 +1,11 @@
 #/run/current-system/sw/bin/bash
-export STATE=init
+#
+# export NIXREPOS=/home/joachim/Desktop/projects/nixos/
+# export PATH=/home/joachim/Desktop/projects/nix-ray:$PATH
+# export PATH=/nix/var/nix/profiles/zidanca/bin:$PATH
+# nix-shell $NIXREPOS/nixpkgs  -A bc
+#
+export NIXRAYSTATUS=init
 
 while getopts ":c:l:" opt; do
   case $opt in
@@ -11,7 +17,7 @@ while getopts ":c:l:" opt; do
       echo "-c was triggered!" >&2
       mkdir -p /tmp/nix-ray/$OPTARG
       nix-shell $NIXREPOS/nixpkgs  -A $OPTARG
-      export PS1="[ $name  \[\e[34;1m\]  \$STATE   \[\e[0m\]\w]\$ "
+      export PS1="[ \$name \[\e[34;1m\] \$NIXRAYSTATUS  \[\e[0m\]  \w ]\$ "
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
