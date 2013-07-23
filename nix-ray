@@ -1,0 +1,21 @@
+#/run/current-system/sw/bin/bash
+export STATE=init
+
+while getopts ":c:l:" opt; do
+  case $opt in
+    l)
+      echo "-l was triggered!" >&2
+      echo $OPTARG
+      ;;
+    c)
+      echo "-c was triggered!" >&2
+      mkdir -p /tmp/nix-ray/$OPTARG
+      nix-shell $NIXREPOS/nixpkgs  -A $OPTARG
+      export PS1="[ $name  \[\e[34;1m\]  \$STATE   \[\e[0m\]\w]\$ "
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+
