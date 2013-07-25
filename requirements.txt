@@ -1,0 +1,13 @@
+-e git://github.com/chaoflow/metachao#egg=metachao
+-e git://github.com/chaoflow/tpv#egg=tpv
+-e git://github.com/chaoflow/tpv.cli#egg=tpv.cli
+-e .
+
+# Comment above and uncomment here, if you prefer manually managed
+# checkout in sibling directories, instead of automatic management
+# within src/.
+#
+# -e ../metachao
+# -e ../tpv
+# -e ../tpv.cli
+# -e .
