@@ -5,19 +5,40 @@
 # export PATH=/nix/var/nix/profiles/zidanca/bin:$PATH
 # nix-shell $NIXREPOS/nixpkgs  -A bc
 #
-export NIXRAYSTATUS=init
 
-while getopts ":c:l:" opt; do
+#s=`typeset -f genericBuild | grep 'phases='`
+phases_="unpackPhase patchPhase configurePhase buildPhase checkPhaseinstallPhase fixupPhase installCheckPhase distPhase"
+export phases=$phases_
+
+while getopts ":c: :l :h" opt; do
   case $opt in
     l)
-      echo "-l was triggered!" >&2
-      echo $OPTARG
+      echo "available phases:" >&2
+      for p in $phases_;do
+        echo "  $p"
+      done
       ;;
     c)
-      echo "-c was triggered!" >&2
-      mkdir -p /tmp/nix-ray/$OPTARG
-      nix-shell $NIXREPOS/nixpkgs  -A $OPTARG
-      export PS1="[ \$name \[\e[34;1m\] \$NIXRAYSTATUS  \[\e[0m\]  \w ]\$ "
+      echo "creating a new environment" >&2
+      #mkdir -p /tmp/nix-ray/$OPTARG
+      #nix-shell $NIXREPOS/nixpkgs  -A $OPTARG
+#export MYPS='$(echo -n "${PWD/#$HOME/~}" | awk -F "/" '"'"'{if (length($0) > 14) { if (NF>4) print $1 "/" $2 "/.../" $(NF-1) "/" $NF; else if (NF>3) print $1 "/" $2 "/.../" $NF; else print $1 "/.../" $NF; } else print $0;}'"'"')'
+export MYPS='[033[34m] \$name '
+PS1='$(eval "echo ${MYPS}")$ '
+
+      #export PS1="| \$name -\[\e[36;3m\] \$NIXRAYDONE \[\e[0m\] [[ \[\033[0;32m\] \$NIXRAYNEXT \[\e[0m\] ]] \[\e[34;1m\] \$NIXRAYLEFT \[\e[0m\]\n| \w  \$ "
+      #a=$(echo patch | sed $"s/./&\xCC\xB6/g")
+      export NIXRAYDONE="unpack $a configure"
+      export NIXRAYNEXT="build"
+      export NIXRAYLEFT="checkinstall fixup installCheck dist"
+
+      
+      ;;
+    h)
+      echo "help:"
+      echo "  l          - list all available phases"
+      echo "  c pkgname  - create a new environment"
+      echo "  h          - help"
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
