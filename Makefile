@@ -2,7 +2,6 @@ LOCALISED_SCRIPTS = ipython ipdb flake8 pylint nose
 PROJECT = $(shell basename $(shell pwd))
 
 PYTHON_VERSION = 2.7
-NIX_PATH = .
 NIX_PROFILE = ./nixprofile${PYTHON_VERSION}
 NIX_SITE = ${NIX_PROFILE}/lib/python${PYTHON_VERSION}/site-packages
 VENV_CMD = ${NIX_PROFILE}/bin/virtualenv
@@ -15,10 +14,7 @@ export KEEP_FAILED := 1
 
 all: print-python-version test-import check
 
-nixpkgs:
-	test -d nixpkgs || git clone -b work git://github.com/chaoflow/nixpkgs
-
-bootstrap: nixpkgs
+bootstrap:
 	nix-env -p ${NIX_PROFILE} -i dev-env -f dev${PYTHON_VERSION}.nix
 	${VENV_CMD} --distribute --clear .
 	realpath --no-symlinks --relative-to ${VENV_SITE} ${NIX_SITE} > ${VENV_SITE}/nixprofile.pth
