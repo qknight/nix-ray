@@ -4,6 +4,8 @@ user story for nix-ray
 the intention behind nix-ray is to have a tool equal to genoo::ebuild with integrated git support.
 one can use this tool to step trough all nix phases manually and rollback to the previous state if needed.
 
+this helps when developing nix extensions
+
 the new command prompt:
 | bc-1.06 -u-n-p-a-c-k- configure build checkinstall fixup installCheck dist
 | %                                                                         
@@ -24,8 +26,8 @@ create a new git repository associated with the nix expression to be debugged
 - changes PS1 according to phases in genericBuild 
 - git init (empty repo)
 - updates PS1 accordingly && stores/restores all environment variables
-
-** TODO nix-ray vanilla
+  
+** TODO nix-ray reset
 - drops you into an empty git branch when there are no pending git commits left
 - updates PS1 accordingly && stores/restores all environment variables
 
@@ -53,9 +55,15 @@ create a new git repository associated with the nix expression to be debugged
 - if no pending git commits are there, will execute the next phase in the phase list shown in green
 - updates PS1 accordingly && stores/restores all environment variables
 
-** TODO nix-ray revert
+** TODO nix-ray previous
 - if no pending git commits are there, will revert to the previous evaluated phase in the phase list shown in green
 - updates PS1 accordingly && stores/restores all environment variables
 
 ** TODO nix-ray tree
 - list all git commits as a tree output
+
+* best practices
+** since nix-ray is based on git it should be easy to derive patches from git which can be used in nixpkgs
+add a small guide how to derive such a patch easily; like 'git format-patch master --stdout'
+** change into a different stored state 
+'git checkout c02934c2934c0249c2'
