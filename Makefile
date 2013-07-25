@@ -2,6 +2,7 @@ LOCALISED_SCRIPTS = ipython ipdb flake8 pylint nose
 PROJECT = $(shell basename $(shell pwd))
 
 PYTHON_VERSION = 2.7
+NIX_PATH = .
 NIX_PROFILE = ./nixprofile${PYTHON_VERSION}
 NIX_SITE = ${NIX_PROFILE}/lib/python${PYTHON_VERSION}/site-packages
 VENV_CMD = ${NIX_PROFILE}/bin/virtualenv
