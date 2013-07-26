@@ -1,0 +1,298 @@
+#! /nix/store/psyc426j0w4plpphgsrir7k96iaccdyw-perl-5.16.3/bin/perl -w -I/nix/store/1sx66s4p6k0bz3v8s4rl8drc0yxv40kf-nix-1.6pre3167_7b09e9f/lib/perl5/site_perl/5.16.3/x86_64-linux-thread-multi -I/nix/store/hdx627p1fwswhl1pir1ca3gxxc6dvnq2-perl-DBI-1.625/lib/perl5/site_perl -I/nix/store/hb9rfv6mrcsi62rfdc5pffq8yjvlwm9c-perl-DBD-SQLite-1.37/lib/perl5/site_perl -I/nix/store/nsgcc20whcfvgl88z9s60bbfvyn6nyak-perl-WWW-Curl-4.15/lib/perl5/site_perl
+
+use strict;
+use Nix::Config;
+use Nix::Store;
+use Nix::Utils;
+use File::Temp qw(tempdir);
+
+
+my $dryRun = 0;
+my $verbose = 0;
+my $runEnv = $0 =~ /nix-shell$/;
+my $pure = 0;
+
+my @instArgs = ();
+my @buildArgs = ();
+my @exprs = ();
+
+my $shell = $ENV{SHELL} || "/bin/sh";
+my $envCommand = ""; # interactive shell
+my @envExclude = ();
+
+my $myName = $runEnv ? "nix-shell" : "nix-build";
+
+
+my $tmpDir = tempdir("$myName.XXXXXX", CLEANUP => 1, TMPDIR => 1)
+    or die "cannot create a temporary directory";
+
+my $outLink = "./result";
+my $drvLink = "$tmpDir/derivation";
+
+# Ensure that the $tmpDir is deleted.
+$SIG{'INT'} = sub { exit 1 };
+
+
+for (my $n = 0; $n < scalar @ARGV; $n++) {
+    my $arg = $ARGV[$n];
+
+    if ($arg eq "--help") {
+        exec "man $myName" or die;
+    }
+
+    elsif ($arg eq "--version") {
+        print "$myName (Nix) $Nix::Config::version\n";
+        exit 0;
+    }
+
+    elsif ($arg eq "--add-drv-link") {
+        $drvLink = "./derivation";
+    }
+
+    elsif ($arg eq "--no-out-link" or $arg eq "--no-link") {
+        $outLink = "$tmpDir/result";
+    }
+
+    elsif ($arg eq "--drv-link") {
+        $n++;
+        die "$0: `$arg' requires an argument\n" unless $n < scalar @ARGV;
+        $drvLink = $ARGV[$n];
+    }
+
+    elsif ($arg eq "--out-link" or $arg eq "-o") {
+        $n++;
+        die "$0: `$arg' requires an argument\n" unless $n < scalar @ARGV;
+        $outLink = $ARGV[$n];
+    }
+
+    elsif ($arg eq "--attr" or $arg eq "-A" or $arg eq "-I") {
+        $n++;
+        die "$0: `$arg' requires an argument\n" unless $n < scalar @ARGV;
+        push @instArgs, ($arg, $ARGV[$n]);
+    }
+
+    elsif ($arg eq "--arg" || $arg eq "--argstr") {
+        die "$0: `$arg' requires two arguments\n" unless $n + 2 < scalar @ARGV;
+        push @instArgs, ($arg, $ARGV[$n + 1], $ARGV[$n + 2]);
+        $n += 2;
+    }
+
+    elsif ($arg eq "--log-type") {
+        $n++;
+        die "$0: `$arg' requires an argument\n" unless $n < scalar @ARGV;
+        push @instArgs, ($arg, $ARGV[$n]);
+        push @buildArgs, ($arg, $ARGV[$n]);
+    }
+
+    elsif ($arg eq "--option") {
+        die "$0: `$arg' requires two arguments\n" unless $n + 2 < scalar @ARGV;
+        push @instArgs, ($arg, $ARGV[$n + 1], $ARGV[$n + 2]);
+        push @buildArgs, ($arg, $ARGV[$n + 1], $ARGV[$n + 2]);
+        $n += 2;
+    }
+
+    elsif ($arg eq "--max-jobs" or $arg eq "-j" or $arg eq "--max-silent-time" or $arg eq "--log-type" or $arg eq "--cores" or $arg eq "--timeout") {
+        $n++;
+        die "$0: `$arg' requires an argument\n" unless $n < scalar @ARGV;
+        push @buildArgs, ($arg, $ARGV[$n]);
+    }
+
+    elsif ($arg eq "--dry-run") {
+        push @buildArgs, "--dry-run";
+        $dryRun = 1;
+    }
+
+    elsif ($arg eq "--show-trace") {
+        push @instArgs, $arg;
+    }
+
+    elsif ($arg eq "-") {
+        @exprs = ("-");
+    }
+
+    elsif ($arg eq "--verbose" or substr($arg, 0, 2) eq "-v") {
+        push @buildArgs, $arg;
+        push @instArgs, $arg;
+        $verbose = 1;
+    }
+
+    elsif ($arg eq "--quiet" || $arg eq "--repair") {
+        push @buildArgs, $arg;
+        push @instArgs, $arg;
+    }
+
+    elsif ($arg eq "--run-env") { # obsolete
+        $runEnv = 1;
+    }
+
+    elsif ($arg eq "--command") {
+        $n++;
+        die "$0: `$arg' requires an argument\n" unless $n < scalar @ARGV;
+        $envCommand = "$ARGV[$n]\nexit $!";
+    }
+
+    elsif ($arg eq "--exclude") {
+        $n++;
+        die "$0: `$arg' requires an argument\n" unless $n < scalar @ARGV;
+        push @envExclude, $ARGV[$n];
+    }
+
+    elsif ($arg eq "--pure") {
+        $pure = 1;
+    }
+
+    elsif (substr($arg, 0, 1) eq "-") {
+        push @buildArgs, $arg;
+    }
+
+    else {
+        push @exprs, $arg;
+    }
+}
+
+@exprs = ("./default.nix") if scalar @exprs == 0;
+
+
+foreach my $expr (@exprs) {
+
+    # Instantiate.
+    my @drvPaths;
+    # !!! would prefer the perl 5.8.0 pipe open feature here.
+    my $pid = open(DRVPATHS, "-|") || exec "$Nix::Config::binDir/nix-instantiate", "--add-root", $drvLink, "--indirect", @instArgs, $expr;
+    while (<DRVPATHS>) {chomp; push @drvPaths, $_;}
+    if (!close DRVPATHS) {
+        die "nix-instantiate killed by signal " . ($? & 127) . "\n" if ($? & 127);
+        exit 1;
+    }
+
+    if ($runEnv) {
+        die "$0: a single derivation is required\n" if scalar @drvPaths != 1;
+        my $drvPath = readlink $drvPaths[0] or die "cannot read symlink `$drvPaths[0]'";
+        my $drv = derivationFromPath($drvPath);
+
+        # Build or fetch all dependencies of the derivation.
+        my @inputDrvs = grep { my $x = $_; (grep { $x =~ $_ } @envExclude) == 0 } @{$drv->{inputDrvs}};
+        system("$Nix::Config::binDir/nix-store -r @buildArgs @inputDrvs @{$drv->{inputSrcs}} > /dev/null") == 0
+            or die "$0: failed to build all dependencies\n";
+
+        # Set the environment.
+        if ($pure) {
+            foreach my $name (keys %ENV) {
+                next if $name eq "HOME" || $name eq "USER" || $name eq "LOGNAME" || $name eq "DISPLAY" || $name eq "PATH";
+                delete $ENV{$name};
+            }
+            # NixOS hack: prevent /etc/bashrc from sourcing /etc/profile.
+            $ENV{'__ETC_PROFILE_SOURCED'} = 1;
+        }
+        $ENV{'NIX_BUILD_TOP'} = $ENV{'TMPDIR'} = $ENV{'TEMPDIR'} = $ENV{'TMP'} = $ENV{'TEMP'} = $ENV{'TMPDIR'} // "/tmp";
+        $ENV{'NIX_STORE'} = $Nix::Config::storeDir;
+        $ENV{$_} = $drv->{env}->{$_} foreach keys %{$drv->{env}};
+
+        $ENV{'IN_NIX_SHELL'} = 1;
+
+        # Run a shell using the derivation's environment.  For
+        # convenience, source $stdenv/setup to setup additional
+        # environment variables and shell functions.  Also don't lose
+        # the current $PATH directories.
+        my $rcfile = "$tmpDir/rc";
+
+        my $myprog=<<'EOT';
+           bldylw='\e[1;33m' # Yellow
+           bldgrn='\e[1;32m' # Green
+           bldred='\e[1;31m' # Red
+           txtrst='\e[0m'    # Text Reset
+
+           PHASES_DISABLED=""
+           PHASES_COMPLETED=""
+           
+           # print a color
+           function PR {
+               echo -e $1
+           }
+           
+           # reset the output stream
+           function RST {
+               echo -n -e $txtrst
+           }
+           
+           function CR {
+               echo -n -e $1 | sed $"s/./&\xCC\xB6/g"
+           }
+
+           function GEN {
+              PHASES_ALL=$(typeset -f genericBuild | grep 'phases=' | sed -e 's/phases=//g' -e 's/"//g' -e 's/;//g' -e 's/\$[a-zA-Z]*//g' -e 's/ *$//g' | xargs | sed -e 's/Phase//g')
+
+              echo -n -e "${bldylw}nix-shell ${txtrst}- $name -"
+              for phase in $PHASES_ALL; do
+                str="$phase"
+                if ( [[ $PHASES_DISABLED =~ $phase ]] ); then
+                  str="$(CR $phase)";
+                  echo -n -e "$bldred $str"
+                  continue
+                fi
+
+                if ( [[ $PHASES_COMPLETED =~ $phase ]] ); then
+                  echo -n -e "$bldylw $str"
+                else
+                  echo -n -e "$bldgrn $str"
+                fi
+              done
+              echo -n -e "$(RST)"
+           }          
+EOT
+
+        writeFile(
+            $rcfile,
+            '[ -e ~/.bashrc ] && source ~/.bashrc; ' .
+            ($pure ? '' : 'p=$PATH; ' ).
+            '[ -e $stdenv/setup ] && source $stdenv/setup; ' .
+            ($pure ? '' : 'PATH=$PATH:$p; ') .
+            'set +e; ' .
+            $myprog .
+            'PS1=\'$(GEN) \n\w % \';' .
+            'unset NIX_ENFORCE_PURITY; ' .
+            $envCommand);
+        exec($ENV{NIX_BUILD_SHELL} // "bash", "--rcfile", $rcfile);
+        die;
+    }
+
+    # Ugly hackery to make "nix-build -A foo.all" produce symlinks
+    # ./result, ./result-dev, and so on, rather than ./result,
+    # ./result-2-dev, and so on.  This combines multiple derivation
+    # paths into one "/nix/store/drv-path!out1,out2,..." argument.
+    my $prevDrvPath = "";
+    my @drvPaths2;
+    foreach my $drvPath (@drvPaths) {
+        my $p = $drvPath; my $output = "out";
+        if ($drvPath =~ /(.*)!(.*)/) {
+            $p = $1; $output = $2;
+        } else {
+            $p = $drvPath;
+        }
+        my $target = readlink $p or die "cannot read symlink `$p'";
+        print STDERR "derivation is $target\n" if $verbose;
+        if ($target eq $prevDrvPath) {
+            push @drvPaths2, (pop @drvPaths2) . "," . $output;
+        } else {
+            push @drvPaths2, $target . "!" . $output;
+            $prevDrvPath = $target;
+        }
+    }
+
+    # Build.
+    my @outPaths;
+    $pid = open(OUTPATHS, "-|") || exec "$Nix::Config::binDir/nix-store", "--add-root", $outLink, "--indirect", "-r",
+        @buildArgs, @drvPaths2;
+    while (<OUTPATHS>) {chomp; push @outPaths, $_;}
+    if (!close OUTPATHS) {
+        die "nix-store killed by signal " . ($? & 127) . "\n" if ($? & 127);
+        exit 1;
+    }
+
+    next if $dryRun;
+
+    foreach my $outPath (@outPaths) {
+        my $target = readlink $outPath or die "cannot read symlink `$outPath'";
+        print "$target\n";
+    }
+}
