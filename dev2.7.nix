@@ -17,6 +17,5 @@ buildEnv {
   ignoreCollisions = true;
   paths = [
     pythonPackages.genzshcomp
-    pythonPackages.plumbum
   ] ++ base.paths;
 }

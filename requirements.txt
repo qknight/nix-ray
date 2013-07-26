@@ -1,4 +1,5 @@
 -e git://github.com/chaoflow/metachao#egg=metachao
+-e git://github.com/chaoflow/plumbum#egg=plumbum
 -e git://github.com/chaoflow/tpv#egg=tpv
 -e git://github.com/chaoflow/tpv.cli#egg=tpv.cli
 -e .
@@ -8,6 +9,7 @@
 # within src/.
 #
 # -e ../metachao
+# -e ../plumbum
 # -e ../tpv
 # -e ../tpv.cli
 # -e .
