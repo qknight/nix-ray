@@ -6,8 +6,8 @@ one can use this tool to step trough all nix phases manually and rollback to the
 this helps when developing nix extensions
 
 the new command prompt:
-| bc-1.06 -u-n-p-a-c-k- configure build checkinstall fixup installCheck dist
-| %                                                                         
+ bc-1.06 -u-n-p-a-c-k- configure build checkinstall fixup installCheck dist
+ %                                                                         
 
 indicating that:
  - bc-1.06 is the nix expression in the nix-ray debugger
@@ -15,6 +15,7 @@ indicating that:
  - all phase names in the PS1 are actually used in the nix expression
  - yello colored phases are already evaluated
  - green colored phases are to be evaluated using 'nix-ray next' or 'nix-ray genericBuild'
+ - red colored phases are disabled
      
 ** nix-shell $NIXREPOS/nixpkgs -A bc / nix-shell -A bc 
 - PHASES_ALL        - a list of all implemented phases which can be called manually
@@ -22,8 +23,10 @@ indicating that:
 - PHASES_COMPLETED  - a subset of PHASE_ALL phases, which have been completed in the order
                       from left to right
 
-create a new git repository associated with the nix expression to be debugged
-*** TODO nix-ray init -A bc  
+*** TODO add PS1 to nix-shell (which is a symlink to nix-builder)
+
+*** TODO nix-ray init bc  
+- create a new git repository associated with the nix expression to be debugged
 - expects to be run in an empty directory (will init git repo)
 - changes PS1 according to phases in genericBuild 
 - git init (empty repo)
@@ -78,3 +81,6 @@ add a small guide how to derive such a patch easily; like 'git format-patch mast
  export PATH=/home/joachim/Desktop/projects/nix-ray:$PATH
  export PATH=/nix/var/nix/profiles/zidanca/bin:$PATH
  nix-shell $NIXREPOS/nixpkgs  -A bc
+
+
+
