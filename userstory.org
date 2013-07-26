@@ -17,11 +17,14 @@ indicating that:
  - green colored phases are to be evaluated using 'nix-ray next' or 'nix-ray genericBuild'
      
 ** nix-shell $NIXREPOS/nixpkgs -A bc / nix-shell -A bc 
+- PHASES_ALL        - a list of all implemented phases which can be called manually
+- PHASES_DISABLED   - a subset of PHASE_ALL phases, which are disabled
+- PHASES_COMPLETED  - a subset of PHASE_ALL phases, which have been completed in the order
+                      from left to right
 
 create a new git repository associated with the nix expression to be debugged
-*** TODO nix-ray bc  
-- creates /tmp/nix-ray/bc
-- drops you in there
+*** TODO nix-ray init -A bc  
+- expects to be run in an empty directory (will init git repo)
 - changes PS1 according to phases in genericBuild 
 - git init (empty repo)
 - updates PS1 accordingly && stores/restores all environment variables
@@ -32,6 +35,10 @@ create a new git repository associated with the nix expression to be debugged
 
 *** TODO nix-ray list
 - lists all phases (usually found in generateBuild function / PS1)
+
+*** TODO nix-ray <phasename>
+- if there are no uncommited files in git it will execute the <phasename> if it is defined/used
+- updates PS1 accordingly && stores/restores all environment variables
 
 *** TODO nix-ray ignore <phasename> 
 - if <phasename> exists it is set to ignore (strike through text in PS1)
@@ -64,5 +71,10 @@ create a new git repository associated with the nix expression to be debugged
 ** best practices
 *** since nix-ray is based on git it should be easy to derive patches from git which can be used in nixpkgs
 add a small guide how to derive such a patch easily; like 'git format-patch master --stdout'
-*** change into a different stored state 
+*** change into a different stored state
 'git checkout c02934c2934c0249c2'
+*** also add a revision number to the nix expression in question
+ export NIXREPOS=/home/joachim/Desktop/projects/nixos/
+ export PATH=/home/joachim/Desktop/projects/nix-ray:$PATH
+ export PATH=/nix/var/nix/profiles/zidanca/bin:$PATH
+ nix-shell $NIXREPOS/nixpkgs  -A bc

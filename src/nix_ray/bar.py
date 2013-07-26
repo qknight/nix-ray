@@ -14,6 +14,6 @@ class Bar(OrderedDict):
                         help="If given, I will be very foo")
 
     def __call__(self, *programs):
-        print("Removing %s %s" % (self.foo, programs,))
+        print("Removing %s %s" % (self.jiha, programs,))
 
 cmd = Bar()
