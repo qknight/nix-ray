@@ -210,7 +210,7 @@ foreach my $expr (@exprs) {
 
            PHASES_DISABLED=""
            PHASES_COMPLETED=""
-           
+           PHASES_ALL=$(typeset -f genericBuild | grep 'phases=' | sed -e 's/phases=//g' -e 's/"//g' -e 's/;//g' -e 's/\$[a-zA-Z]*//g' -e 's/ *$//g' | xargs | sed -e 's/Phase//g')
            # print a color
            function PR {
                echo -e $1
@@ -226,8 +226,6 @@ foreach my $expr (@exprs) {
            }
 
            function GEN {
-              PHASES_ALL=$(typeset -f genericBuild | grep 'phases=' | sed -e 's/phases=//g' -e 's/"//g' -e 's/;//g' -e 's/\$[a-zA-Z]*//g' -e 's/ *$//g' | xargs | sed -e 's/Phase//g')
-
               echo -n -e "${bldylw}nix-shell ${txtrst}-${bldpur} ${name} ${txtrst}-"
               for phase in $PHASES_ALL; do
                 str="$phase"
