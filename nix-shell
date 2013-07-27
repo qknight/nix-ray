@@ -197,9 +197,15 @@ foreach my $expr (@exprs) {
         my $rcfile = "$tmpDir/rc";
 
         my $myprog=<<'EOT';
-           bldylw='\e[1;33m' # Yellow
-           bldgrn='\e[1;32m' # Green
+           bldblk='\e[1;30m' # Black - Bold
            bldred='\e[1;31m' # Red
+           bldgrn='\e[1;32m' # Green
+           bldylw='\e[1;33m' # Yellow
+           bldblu='\e[1;34m' # Blue
+           bldpur='\e[1;35m' # Purple
+           bldcyn='\e[1;36m' # Cyan
+           bldwht='\e[1;37m' # White
+
            txtrst='\e[0m'    # Text Reset
 
            PHASES_DISABLED=""
@@ -222,11 +228,11 @@ foreach my $expr (@exprs) {
            function GEN {
               PHASES_ALL=$(typeset -f genericBuild | grep 'phases=' | sed -e 's/phases=//g' -e 's/"//g' -e 's/;//g' -e 's/\$[a-zA-Z]*//g' -e 's/ *$//g' | xargs | sed -e 's/Phase//g')
 
-              echo -n -e "${bldylw}nix-shell ${txtrst}- $name -"
+              echo -n -e "${bldylw}nix-shell ${txtrst}-${bldpur} ${name} ${txtrst}-"
               for phase in $PHASES_ALL; do
                 str="$phase"
                 if ( [[ $PHASES_DISABLED =~ $phase ]] ); then
-                  str="$(CR $phase)";
+                  str=CR $phase
                   echo -n -e "$bldred $str"
                   continue
                 fi
@@ -237,7 +243,7 @@ foreach my $expr (@exprs) {
                   echo -n -e "$bldgrn $str"
                 fi
               done
-              echo -n -e "$(RST)"
+              RST 
            }          
 EOT
 
