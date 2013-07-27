@@ -229,19 +229,19 @@ foreach my $expr (@exprs) {
               echo -n -e "${bldylw}nix-shell ${txtrst}-${bldpur} ${name} ${txtrst}-"
               for phase in $PHASES_ALL; do
                 str="$phase"
-                if ( [[ $PHASES_DISABLED =~ $phase ]] ); then
-                  str=CR $phase
+                if [[ $PHASES_DISABLED =~ $phase ]]; then
+                  str=$(CR $phase)
                   echo -n -e "$bldred $str"
                   continue
                 fi
 
-                if ( [[ $PHASES_COMPLETED =~ $phase ]] ); then
+                if [[ $PHASES_COMPLETED =~ $phase ]] ; then
                   echo -n -e "$bldylw $str"
                 else
                   echo -n -e "$bldgrn $str"
                 fi
               done
-              RST 
+              RST
            }          
 EOT
 
@@ -253,8 +253,8 @@ EOT
             ($pure ? '' : 'PATH=$PATH:$p; ') .
             'set +e; ' .
             $myprog .
-            'PS1=\'$(GEN) \n\w % \';' .
             'unset NIX_ENFORCE_PURITY; ' .
+            'PS1=\'\[\033[0;37m\]\342\224\214\342\224\200$(GEN)\n\[\033[0;37m\]\342\224\224\342\224\200\342\224\200\076 \[\033[0m\]\w % \';' .
             $envCommand);
         exec($ENV{NIX_BUILD_SHELL} // "bash", "--rcfile", $rcfile);
         die;
