@@ -74,9 +74,23 @@ indicating that:
 ** best practices
 *** since nix-ray is based on git it should be easy to derive patches from git which can be used in nixpkgs
 add a small guide how to derive such a patch easily; like 'git format-patch master --stdout'
+
+*** nix-shell could also assist in creating patches
+the main goal in the first place was to make 'creating patches' easier, 
+so that you would not have to maintain two source checkouts and use a 
+manual diff for that.
+
+it would be totally cool to have a command like this:
+   createPatch file.c src/file.h README > mypatch-1.2.3.patch
+
+which would then transparently use 'unpackPhase' (and maybe also 
+'patchPhase') into a 'clean' directory in the background and then use the 
+diff command to create a patch which would be compatible to nix.
+
 *** change into a different stored state
 'git checkout c02934c2934c0249c2'
-*** also add a revision number to the nix expression in question
+
+*** getting a nix-shell to test changes
  export NIXREPOS=/home/joachim/Desktop/projects/nixos/
  export PATH=/home/joachim/Desktop/projects/nix-ray:$PATH
  export PATH=/nix/var/nix/profiles/zidanca/bin:$PATH
