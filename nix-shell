@@ -210,7 +210,9 @@ foreach my $expr (@exprs) {
 
            PHASES_DISABLED=""
            PHASES_COMPLETED=""
-           PHASES_ALL=$(typeset -f genericBuild | grep 'phases=' | sed -e 's/phases=//g' -e 's/"//g' -e 's/;//g' -e 's/\$[a-zA-Z]*//g' -e 's/ *$//g' | xargs | sed -e 's/Phase//g')
+           PHASES_ALL=$(typeset -f genericBuild | perl -e 'while(<>) { if (/phases="(.*)"/) {
+                        print join " ",map { s/Phase$//; $_ } grep(!/^\$/, split(/ +/,$1));
+                        LAST; } }');
            # print a color
            function PR {
                echo -e $1
