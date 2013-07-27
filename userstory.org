@@ -40,10 +40,12 @@ indicating that:
 - lists all phases (usually found in generateBuild function / PS1)
 
 *** TODO nix-ray <phasename>
+- <phasename> as in typing 'unpack' for the unpackPhase
 - if there are no uncommited files in git it will execute the <phasename> if it is defined/used
 - updates PS1 accordingly && stores/restores all environment variables
 
 *** TODO nix-ray ignore <phasename> 
+- <phasename> as in typing 'unpack' for the unpackPhase
 - if <phasename> exists it is set to ignore (strike through text in PS1)
 - updates PS1 accordingly && stores/restores all environment variables
 
