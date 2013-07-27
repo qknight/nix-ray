@@ -45,13 +45,13 @@ setup(name='nix_ray',
 
           # Subcommands for nix-ray
           'nix_ray.commands': [
-              'foo = nix_ray.foo:cmd',
-              'foo/baz = nix_ray.foo:baz',
-              'bar = nix_ray.bar:cmd',
+              'foo = nix_ray.foo:Foo',
+              'foo/baz = nix_ray.foo:Baz',
+              'bar = nix_ray.bar:Bar',
           ],
 
           # hook into xin as 'xin ray'
           'tpv.nix.xin.commands': [
-              'ray = nix_ray:app',
+              'ray = nix_ray:NixRay',
           ],
       })

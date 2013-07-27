@@ -4,29 +4,28 @@
 import tpv.cli
 import tpv.pkg_resources
 
+from plumbum import FG
 from plumbum.cmd import ls, grep, wc, git
-from tpv.ordereddict import OrderedDict
 
 
-@tpv.pkg_resources.children_from_entry_points(
-    entry_point_group="nix_ray.commands",
-)
-class NixRay(OrderedDict):
+class NixRay(tpv.cli.Command):
     """nix-ray
 
     Assistant for debugging the phases of a nix expression
     """
+    VERSION = 0
+    entry_point_group="nix_ray.commands"
+
     verbose = tpv.cli.Flag(["v", "verbose"],
                            help="If given, I will be very talkative")
 
     def __call__(self, filename=None):
-        if self.nested_command:
-            return
-        chain = ls['-la'] | grep['a'] | wc
-        print(chain)
-        print(chain())
-        if self.verbose:
-            print "Yadda " * 200
+        self.help()
+        # chain = ls['-la'] | grep['a'] | wc
+        # print(chain)
+        # chain & FG
+        # if self.verbose:
+        #     print "Yadda " * 200
 
     @tpv.cli.switch(['f', 'foo'], int)
     def foo(self, bar):
@@ -35,5 +34,4 @@ class NixRay(OrderedDict):
         self.bar = bar
         print(bar)
 
-
-app = tpv.cli.application(NixRay)()
+app = NixRay.run

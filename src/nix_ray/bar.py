@@ -1,9 +1,7 @@
 import tpv.cli
 
-from tpv.ordereddict import OrderedDict
 
-
-class Bar(OrderedDict):
+class Bar(tpv.cli.Command):
     """Install something
 
     And a longer descriptions for it.
@@ -15,5 +13,3 @@ class Bar(OrderedDict):
 
     def __call__(self, *programs):
         print("Removing %s %s" % (self.jiha, programs,))
-
-cmd = Bar()

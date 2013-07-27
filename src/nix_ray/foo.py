@@ -1,9 +1,7 @@
 import tpv.cli
 
-from tpv.ordereddict import OrderedDict
 
-
-class Foo(OrderedDict):
+class Foo(tpv.cli.Command):
     """Install something
 
     And a longer descriptions for it.
@@ -16,10 +14,8 @@ class Foo(OrderedDict):
     def __call__(self, *programs):
         print("Removing %s %s" % (self.foo, programs,))
 
-cmd = Foo()
 
-
-class Baz(OrderedDict):
+class Baz(tpv.cli.Command):
     """Install something
 
     And a longer descriptions for it.
@@ -31,5 +27,3 @@ class Baz(OrderedDict):
 
     def __call__(self, *programs):
         print("Removing %s %s" % (self.foo, programs,))
-
-baz = Baz()
